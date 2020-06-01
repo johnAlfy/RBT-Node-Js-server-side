@@ -1,0 +1,87 @@
+Index: src/app.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>const md= require('reflect-metadata');\r\n\r\nconst session = require('express-session');\r\nconst express = require(\"express\");\r\nconst bodyParser = require('body-parser');\r\nconst path = require(\"path\");\r\nlet createConnection = require(\"typeorm\").createConnection();\r\n\r\ncreateConnection.then(()=> {\r\n    let location = path.join(__dirname,\"../public\");\r\n    console.log(location);\r\n    let app = express();\r\n    app.use(express.static(location));\r\n    app.use(bodyParser.json());\r\n    app.use(bodyParser.urlencoded({ extended: true }));\r\n    app.use(session({secret: \"secret\", saveUninitialized: true, resave: false}));\r\n\r\n    app.use(function(req, res, next) {\r\n        res.header(\"Access-Control-Allow-Origin\", \"*\");\r\n        res.header(\"Access-Control-Allow-Headers\", \"Origin, X-Requested-With, Content-Type, Accept\");\r\n        next();\r\n    });\r\n   /* app.set('views',location);\r\n    app.engine('html', require('ejs').renderFile);\r\n    app.set('view engine', 'ejs');\r\n*/\r\n    app.listen(5000,()=>{\r\n        console.log(\"application has started on port 5000\");\r\n    });\r\n\r\n    module.exports ={\r\n        app,path\r\n    };\r\n\r\n    const admin = require(\"./clientrequests/Admin_request\");\r\n    const parent = require(\"./clientrequests/Parent_request\");\r\n    const supervisor = require(\"./clientrequests/Supervisor_requests\");\r\n    const driver = require(\"./clientrequests/Driver_requests\");\r\n\r\n\r\n}).catch(error => {\r\n    console.log(error);\r\n});\r\n\r\n\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/app.js	(revision 325011c87fd1ad4aeafac1595bbe2614b3009d3f)
++++ src/app.js	(date 1560198768949)
+@@ -14,7 +14,11 @@
+     app.use(bodyParser.json());
+     app.use(bodyParser.urlencoded({ extended: true }));
+     app.use(session({secret: "secret", saveUninitialized: true, resave: false}));
+-
++    /*
++    Access to XMLHttpRequest at 'http://localhost:5000/campaign'
++    from origin 'http://localhost:3000' has been blocked by CORS policy: Response to preflight
++     request doesn't pass access control check: No 'Access-Control-Allow-Origin' header is present
++     on the requested resource.*/
+     app.use(function(req, res, next) {
+         res.header("Access-Control-Allow-Origin", "*");
+         res.header("Access-Control-Allow-Headers", "Origin, X-Requested-With, Content-Type, Accept");
+Index: src/entity/Bus.ts
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>import {Column, Entity, JoinColumn, OneToMany, OneToOne, PrimaryGeneratedColumn} from \"typeorm\";\r\nimport {Student} from \"./Student\";\r\nimport {Supervisor} from \"./Supervisor\";\r\nimport {Driver} from \"./Driver\";\r\nimport {RoutePath} from \"./RoutePath\";\r\n\r\n@Entity()\r\nexport class Bus {\r\n\r\n    @PrimaryGeneratedColumn()\r\n    id:number;\r\n\r\n    @Column({unique: true})\r\n    bus_numbers:String;\r\n\r\n    @OneToMany(type => Student, stud=> stud.bus)\r\n    students: Student[];\r\n\r\n    @OneToOne(type => Supervisor, supervisor=> supervisor.bus)\r\n    supervisor: Supervisor;\r\n\r\n    @OneToOne(type => Driver, driver=> driver.bus)\r\n    driver: Driver;\r\n\r\n    @OneToOne(type => RoutePath)\r\n    @JoinColumn()\r\n    routePath:RoutePath;\r\n}
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/entity/Bus.ts	(revision 325011c87fd1ad4aeafac1595bbe2614b3009d3f)
++++ src/entity/Bus.ts	(date 1560195623862)
+@@ -13,6 +13,9 @@
+     @Column({unique: true})
+     bus_numbers:String;
+ 
++    @Column()
++    capacity: number;
++
+     @OneToMany(type => Student, stud=> stud.bus)
+     students: Student[];
+ 
+@@ -22,7 +25,7 @@
+     @OneToOne(type => Driver, driver=> driver.bus)
+     driver: Driver;
+ 
+-    @OneToOne(type => RoutePath)
++    @OneToOne(type => RoutePath, routePath=> routePath.bus)
+     @JoinColumn()
+     routePath:RoutePath;
+ }
+\ No newline at end of file
+Index: src/entity/Admin.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\"use strict\";\r\nvar __extends = (this && this.__extends) || (function () {\r\n    var extendStatics = function (d, b) {\r\n        extendStatics = Object.setPrototypeOf ||\r\n            ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||\r\n            function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };\r\n        return extendStatics(d, b);\r\n    };\r\n    return function (d, b) {\r\n        extendStatics(d, b);\r\n        function __() { this.constructor = d; }\r\n        d.prototype = b === null ? Object.create(b) : (__.prototype = b.prototype, new __());\r\n    };\r\n})();\r\nvar __decorate = (this && this.__decorate) || function (decorators, target, key, desc) {\r\n    var c = arguments.length, r = c < 3 ? target : desc === null ? desc = Object.getOwnPropertyDescriptor(target, key) : desc, d;\r\n    if (typeof Reflect === \"object\" && typeof Reflect.decorate === \"function\") r = Reflect.decorate(decorators, target, key, desc);\r\n    else for (var i = decorators.length - 1; i >= 0; i--) if (d = decorators[i]) r = (c < 3 ? d(r) : c > 3 ? d(target, key, r) : d(target, key)) || r;\r\n    return c > 3 && r && Object.defineProperty(target, key, r), r;\r\n};\r\nObject.defineProperty(exports, \"__esModule\", { value: true });\r\nvar typeorm_1 = require(\"typeorm\");\r\nvar User_1 = require(\"./User\");\r\nvar Admin = /** @class */ (function (_super) {\r\n    __extends(Admin, _super);\r\n    function Admin() {\r\n        return _super !== null && _super.apply(this, arguments) || this;\r\n    }\r\n    Admin = __decorate([\r\n        typeorm_1.Entity()\r\n    ], Admin);\r\n    return Admin;\r\n}(User_1.User));\r\nexports.Admin = Admin;\r\n//# sourceMappingURL=Admin.js.map
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/entity/Admin.js	(revision 325011c87fd1ad4aeafac1595bbe2614b3009d3f)
++++ src/entity/Admin.js	(date 1560195623859)
+@@ -5,7 +5,7 @@
+             ({ __proto__: [] } instanceof Array && function (d, b) { d.__proto__ = b; }) ||
+             function (d, b) { for (var p in b) if (b.hasOwnProperty(p)) d[p] = b[p]; };
+         return extendStatics(d, b);
+-    };
++    }
+     return function (d, b) {
+         extendStatics(d, b);
+         function __() { this.constructor = d; }
+Index: src/clientrequests/Parent_request.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>\r\nconst Parent_cont = require( \"../databaserequests/Parent_controller\");\r\nconst supervisor_cont = require( \"../databaserequests/Supervisor_controller\");\r\nconst driver_cont = require( \"../databaserequests/Driver_contoller\");\r\nconst ad_=require(\"../entity/Admin\").Admin;\r\nconst student=require(\"../entity/Student\").Student;\r\nconst parent=require(\"../entity/Parent\").Parent;\r\nconst super_vis=require(\"../entity/Supervisor\").Supervisor;\r\nconst driv=require(\"../entity/Driver\").Driver;\r\nconst Repo=require(\"../entity/Report\").Report;\r\nconst bus=require(\"../entity/Bus\").Bus;\r\nconst app = require(\"../app\").app;\r\nconst getConnection = require(\"typeorm\").getConnection();\r\nconst connection = getConnection;\r\n\r\n//add report\r\napp.post('/add_report', async (req, res) => {\r\n    let repo = new Repo();\r\n    repo.content =req.body[0].content;\r\n    repo.dateTime = req.body[0].Date;\r\n    repo.User_mail = req.body[0].email;\r\n    repo.receiver_mail_or_id = \"Admin\";\r\n    repo.Ishidden=false ;\r\n    repo.first_time=false ;\r\n    Parent_cont.add_report(repo).then(result => {\r\n        if(result!=null) {\r\n            res.send({msg: \"success\"});\r\n        }\r\n        else{\r\n            res.send({msg: \"fail\"});\r\n        }\r\n        });\r\n});\r\n    app.post('/review_answer',async  (req,res)=>{\r\n      Parent_cont.Display_answer(req.body[0].email).then(result=>{\r\n          if(result==false){res.send(\"No answer yet\");}\r\n          else{res.send(result);\r\n          }\r\n      });});\r\n\r\n    app.post('/delete_repo',async(req,res)=>{\r\n\r\n        Parent_cont.delete_repo(req.body[0].email).then(result=>{res.send([{res:result}])});\r\n\r\n    })\r\n\r\napp.post('/check_abs',async(req,res)=>{\r\n\r\n    Parent_cont.check_absense(req.body[0].email).then(result=>{res.send(result);\r\n\r\n})})\r\n//display\r\napp.get('/display_info',async(req,res)=>{\r\n        let email=req.body.email;\r\n        Parent_cont.display_info(email).then(result=>{\r\n        res.send(result);\r\n\r\n    })\r\n});\r\n\r\n//log in\r\n\r\napp.post('/log_in', async (req,res)=>{\r\n\r\n    let x=false;\r\n    console.log(\"Successful\");\r\n    Parent_cont.check_parent(req.body.email,req.body.password).then(result=>{\r\n        if(result!=false){res.send(result);x=true;}\r\n       });\r\n    supervisor_cont.check_supervisor(req.body.email,req.body.password).then(result=>{\r\n        if(result!=null){res.send(result);x=true;}\r\n    });\r\n    driver_cont.check_driver(req.body.email,req.body.password).then(result=>{\r\n        if(result!=null){res.send(result);x=true;}\r\n        if(x===false){res.send({error:\"UserName or password is not valid \"});}\r\n\r\n    })\r\n    });\r\napp.post('/show_notification',async (req,res)=>{\r\n    Parent_cont.notification().then(result=>{\r\n\r\n        Parent_cont.check_answer(req.body[0].email).then(r=> {\r\n            if (r==true&&result != null) {\r\n                let s={reportsAnswers:true};\r\n                result.push(s);\r\n              //  console.log(result);\r\n                res.send(result);\r\n\r\n\r\n            }\r\n           else if (r==false&&result != null) {\r\n                let s={reportsAnswers:false};\r\n                result.push(s);\r\n                //console.log(result);\r\n                res.send(result);\r\n            }\r\n            else{res.send({error:\"empty\"})}\r\n        })\r\n\r\n   })\r\n});\r\napp.post('/child_info',async (req,res)=>{\r\n    console.log(req.body);\r\n    Parent_cont.show_mychildren_information(req.body[0].email).then(result=>{\r\n\r\n        res.send(result);\r\n        })\r\n\r\n});\r\napp.post('/driver_info',async (req,res)=>{\r\n    Parent_cont.show_driver_information(req.body[0].driver_username).then(result=>{\r\n        console.log(result);\r\n        res.send(result);\r\n    })\r\n});\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/clientrequests/Parent_request.js	(revision 325011c87fd1ad4aeafac1595bbe2614b3009d3f)
++++ src/clientrequests/Parent_request.js	(date 1560198768902)
+@@ -50,7 +50,7 @@
+ 
+ })})
+ //display
+-app.get('/display_info',async(req,res)=>{
++    app.get('/display_info',async(req,res)=>{
+         let email=req.body.email;
+         Parent_cont.display_info(email).then(result=>{
+         res.send(result);

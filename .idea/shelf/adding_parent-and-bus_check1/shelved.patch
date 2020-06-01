@@ -1,0 +1,430 @@
+Index: src/clientrequests/Admin_request.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>const Admin_cont = require( \"../databaserequests/Admin_controller\");\r\nconst ad_=require(\"../entity/Admin\").Admin;\r\nconst student=require(\"../entity/Student\").Student;\r\nconst parent=require(\"../entity/Parent\").Parent;\r\nconst super_vis=require(\"../entity/Supervisor\").Supervisor;\r\nconst driv=require(\"../entity/Driver\").Driver;\r\nconst bus=require(\"../entity/Bus\").Bus;\r\nconst report=require(\"../entity/Report\").Report;\r\nconst app = require(\"../app\").app;\r\nconst getConnection = require(\"typeorm\").getConnection();\r\nconst connection = getConnection;\r\nconst session = require('express-session');\r\n\r\n\r\napp.post('/add_bus',async (req,res)=>{\r\n    let b=new bus();\r\n    b.bus_numbers=req.body.bus.busNumber;\r\n    b.driver=await Admin_cont.find_driver(req.body.bus.driverID);\r\n b.supervisor= await Admin_cont.find_supervisor(req.body.bus.supervisorID);\r\n\r\n    Admin_cont.add_buses(b).then(result=>{\r\n        res.send({bus: result, status: true});\r\n    })\r\n})\r\n\r\napp.get ('/find_supervisor_not_selected',async(req,res)=>{\r\n    Admin_cont.get_supervisor_not_selected().then((result)=>{\r\n        res.send({supervisor:result});\r\n    })\r\n})\r\napp.get('/find_driver_not_selected',async(req,res)=>{\r\n    Admin_cont.get_driver_not_selected().then((result)=>{\r\n        res.send({driver:result});\r\n    })})\r\n\r\napp.get('/get_buses',async (req,res)=>{\r\n    Admin_cont.get_buses().then((result)=>{\r\n        res.send(result);\r\n    })\r\n})\r\napp.post('/add_user', async (req, res) => {\r\n\r\n\r\n    let check_email = await Admin_cont.check_admins_supervisor_driver_parent_student(req.body.user.email);\r\n    if (check_email == false) {\r\n        res.send({status: \"Email is alredy exist\"})\r\n    }\r\n    ;\r\n    let check_by_contact = await Admin_cont.check_user_by_contact_number(req.body.user.contactNumber)\r\n    if (check_by_contact == false) {\r\n        res.send({status: \"The Contact_Numeber is alredy exist\"})\r\n    }\r\n    ;\r\n\r\n    let check_by_national = await Admin_cont.check_user_by_national_namber(req.body.user.nationalNumber);\r\n    if (check_by_national == false) {\r\n        res.send({status: \"The National Number is alredy exist\"})\r\n    }\r\n\r\n    if (req.body.user.userType === \"admin\") {\r\n        let addmin = new ad_();\r\n        addmin.id = req.body.user.id;\r\n        addmin.firstName = req.body.user.firstName;\r\n        addmin.lastName = req.body.user.lastName;\r\n        addmin.username = addmin.firstName + \"_\" + addmin.lastName;\r\n        addmin.password = req.body.user.password;\r\n        addmin.contactNumber = req.body.user.contactNumber;\r\n        addmin.dateOfBirth = req.body.user.dateOfBirth;\r\n        addmin.email = req.body.user.email;\r\n        addmin.nationalNumber = req.body.user.nationalNumber;\r\n        addmin.address = req.body.user.address;\r\n        Admin_cont.add_admin(addmin).then(result => {\r\n            res.send({user: result, status: true});\r\n        })\r\n    } else if (req.body.user.userType === \"supervisor\") {\r\n        let supervisor = new super_vis();\r\n        supervisor.id = req.body.user.id;\r\n        supervisor.firstName = req.body.user.firstName;\r\n        supervisor.lastName = req.body.user.lastName;\r\n        supervisor.username = supervisor.firstName + \"_\" + supervisor.lastName;\r\n        supervisor.password = req.body.user.password;\r\n        supervisor.contactNumber = req.body.user.contactNumber;\r\n        supervisor.dateOfBirth = req.body.user.dateOfBirth;\r\n        supervisor.email = req.body.user.email;\r\n        supervisor.nationalNumber = req.body.user.nationalNumber;\r\n        supervisor.address = req.body.user.address;\r\n        supervisor.Type_of_user = req.body.user.userType;\r\n        Admin_cont.add_superavisor(supervisor).then(result => {\r\n            res.send({user: result, status: true});\r\n        })\r\n    } else if (req.body.user.userType === \"driver\") {\r\n        let driver = new driv();\r\n        driver.id = req.body.user.id;\r\n        driver.firstName = req.body.user.firstName;\r\n        driver.lastName = req.body.user.lastName;\r\n        driver.username = driver.firstName + \"_\" + driver.lastName;\r\n        driver.password = req.body.user.password;\r\n        driver.contactNumber = req.body.user.contactNumber;\r\n        driver.dateOfBirth = req.body.user.dateOfBirth;\r\n        driver.email = req.body.user.email;\r\n        driver.address = req.body.user.address;\r\n        driver.nationalNumber = req.body.user.nationalNumber;\r\n        driver.Type_of_user = req.body.user.userType;\r\n\r\n        Admin_cont.add_driver(driver).then(result => {\r\n            res.send({user: result, status: true});\r\n        })\r\n    } else if (req.body.user.userType === \"Student\") {\r\n        let stud = new student();\r\n        stud.name = req.body.name;\r\n        stud.parent_mail = req.body.parent_mail;\r\n        stud.age = req.body.age;\r\n        stud.bus = req.body.bus;\r\n        stud.classNumber = req.body.classNumber;\r\n        stud.level = req.body.level;\r\n        stud.dateOfBirth = req.body.user.dateOfBirth;\r\n        stud.address = req.body.user.address;\r\n\r\n        Admin_cont.add_student(stud).then(result => {\r\n            res.send({user: result, status: true})\r\n        });\r\n\r\n    } else {\r\n        let par = new parent();\r\n        par.id = req.body.user.id;\r\n        par.firstName = req.body.user.firstName;\r\n        par.lastName = req.body.user.lastName;\r\n        par.username = par.firstName + \"_\" + par.lastName;\r\n        par.password = req.body.user.password;\r\n        par.contactNumber = req.body.user.contactNumber;\r\n        par.dateOfBirth = req.body.user.dateOfBirth;\r\n        par.email = req.body.user.email;\r\n        par.nationalNumber = req.body.user.nationalNumber;\r\n        par.address = req.body.user.address;\r\n        Admin_cont.add_parent(par);\r\n        par.Type_of_user = req.body.user.UserType;\r\n        Admin_cont.add_parent(par).then(result => {\r\n            res.send({user: result, status: true});\r\n        })\r\n\r\n    }\r\n})\r\n\r\n//add student\r\napp.get('/get_add_student', async (req, res) => {\r\n    let stud=new student();\r\n    stud.name=req.body.name;\r\n    stud.parent_mail=req.body.parent_mail;\r\n    stud.age=req.body.age;\r\n    stud.bus=req.body.bus;\r\n    stud.classNumber=req.body.classNumber;\r\n    stud.level=req.body.level;\r\n    stud.dateOfBirth= new Date(req.body.user.yearOfBirth, req.body.user.MonthOfBirth, req.body.user.DayOfBirth);\r\n    Admin_cont.add_student(stud).then(result=>{\r\n        res.send(result);\r\n    });\r\n});\r\n\r\n\r\napp.get('/get_find_admins', async (req, res) => {\r\n    Admin_cont.get_admins().then((result)=>{\r\n        console.log(result);\r\n        res.send({Users: result});\r\n    });\r\n});\r\napp.get('/get_find_parents',async (req,res)=>\r\n{\r\n    Admin_cont.getparents().then((result) => {\r\n        console.log(result);\r\n        res.send({Users: result});\r\n    })\r\n})\r\napp.get('/get_find_drivers',async (req,res)=>\r\n{\r\n    Admin_cont.getdrivers().then((result) => {\r\n        console.log(result);\r\n        res.send({Users: result});\r\n    })\r\n});\r\napp.get('/get_find_supervisors',async (req,res)=>\r\n{\r\n    Admin_cont.getsupervisor().then((result) => {\r\n        console.log(result);\r\n        res.send({Users: result});\r\n    })\r\n});\r\napp.get('/review_reports', async (req, res) => {\r\n\r\n    Admin_cont.review_reports().then((result)=>{\r\n        console.log(result);\r\n        res.send(result);\r\n    });\r\n});\r\napp.get('/add_resp',async(req,res)=>{\r\n    let repo=new report();\r\n    repo.content=req.body.content;\r\n    repo.receiver_mail_or_id=req.body.email;\r\n    repo.User_mail=\"admin\";\r\n    Admin_cont.add_report(repo).then(result=>{\r\n        res.send(result);\r\n    })\r\n});\r\napp.post('/login',async  (req,res)=>{\r\n    Admin_cont.check_adimn(req.body.email,req.body.password).then (\r\n        (result=>{\r\n            if(result!=null){\r\n                req.session.user=result;\r\n                res.send({ user: result});\r\n            }\r\n            else {\r\n                res.send({ user: null});\r\n            }\r\n        })\r\n    )\r\n});\r\n\r\napp.post('/find_user',async (req,res)=>{\r\n    if(req.body.type===\"email\"){\r\n        Admin_cont.find_user_by_email(req.body.email,req.body.usertype).then(result=> {\r\n            if (result != null) {\r\n                res.send({user: result});\r\n            } else {\r\n                res.send({user: null});\r\n            }\r\n        })\r\n    }\r\n    else if (req.body.type===\"address\"){\r\n        Admin_cont.find_user_by_address(req.body.address,req.body.usertype).then(result=>{\r\n            if(result!=null){\r\n                res.send({user:result});\r\n            }\r\n            else {\r\n                res.send({user:null});\r\n            }\r\n        })\r\n    }\r\n    else if(req.body.type===\"contact_number\"){\r\n        Admin_cont.find_user_by_contact_number(req.body.address,req.body.usertype).then(result=>{\r\n            if(result!=null){\r\n                res.send({user:result});\r\n            }\r\n            else {\r\n                res.send({user:null});\r\n            }\r\n\r\n        })\r\n    }\r\n    else if(req.body.type===\"username\"){\r\n        Admin_cont.find_user_by_username(req.body.username,req.body.usertype).then(result=>{\r\n            if(result!=null){\r\n                res.send({user:result});\r\n            }\r\n            else {\r\n                res.send({user:null});\r\n            }\r\n        })\r\n    }\r\n})\r\n\r\napp.post('/add_answer',async (req,res)=>{\r\n    Admin_cont.find_and_update_report(\"req.body.email\",\"req.body.answer\").then(result=>{res.send(result)})\r\n});\r\n\r\napp.post('/notification',async (req,res)=>{\r\n    let repo=new report();\r\n    repo.type=req.body.type;\r\n    repo.content=\"general\";\r\n    repo.User_mail=\"admin\";\r\n    repo.receiver_mail_or_id=\"parents\";\r\n    Admin_cont.add_report(repo).then(result=>{\r\n        res.send(result);\r\n    })\r\n\r\n});\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n\r\n
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/clientrequests/Admin_request.js	(revision 325011c87fd1ad4aeafac1595bbe2614b3009d3f)
++++ src/clientrequests/Admin_request.js	(date 1560208257507)
+@@ -1,41 +1,51 @@
+-const Admin_cont = require( "../databaserequests/Admin_controller");
+-const ad_=require("../entity/Admin").Admin;
+-const student=require("../entity/Student").Student;
+-const parent=require("../entity/Parent").Parent;
+-const super_vis=require("../entity/Supervisor").Supervisor;
+-const driv=require("../entity/Driver").Driver;
+-const bus=require("../entity/Bus").Bus;
+-const report=require("../entity/Report").Report;
++const Admin_cont = require("../databaserequests/Admin_controller");
++const ad_ = require("../entity/Admin").Admin;
++const student = require("../entity/Student").Student;
++const parent = require("../entity/Parent").Parent;
++const super_vis = require("../entity/Supervisor").Supervisor;
++const driv = require("../entity/Driver").Driver;
++const bus = require("../entity/Bus").Bus;
++const report = require("../entity/Report").Report;
+ const app = require("../app").app;
+ const getConnection = require("typeorm").getConnection();
+ const connection = getConnection;
+ const session = require('express-session');
+ 
+ 
+-app.post('/add_bus',async (req,res)=>{
+-    let b=new bus();
+-    b.bus_numbers=req.body.bus.busNumber;
+-    b.driver=await Admin_cont.find_driver(req.body.bus.driverID);
+- b.supervisor= await Admin_cont.find_supervisor(req.body.bus.supervisorID);
+-
+-    Admin_cont.add_buses(b).then(result=>{
+-        res.send({bus: result, status: true});
+-    })
++
++
++app.post('/add_bus', async (req, res) => {
++    let b = new bus();
++    b.bus_numbers = req.body.bus.busNumber;
++    b.capacity = req.body.bus.capacity;
++    b.driver = await Admin_cont.find_driver(req.body.bus.driverID);
++    b.supervisor = await Admin_cont.find_supervisor(req.body.bus.supervisorID);
++    let unique=await Admin_cont.check_buses( req.body.bus.busNumber);
++    if(unique==true) {
++        Admin_cont.add_buses(b).then(result => {
++            res.send({bus: result, status: true});
++        })
++    }
++    else{
++        res.send({bus: null, status: "Error There is Dublicate"});
++    }
+ })
++
+ 
+-app.get ('/find_supervisor_not_selected',async(req,res)=>{
+-    Admin_cont.get_supervisor_not_selected().then((result)=>{
+-        res.send({supervisor:result});
++app.get('/find_supervisor_not_selected', async (req, res) => {
++    Admin_cont.get_supervisor_not_selected().then((result) => {
++        res.send({supervisor: result});
+     })
+ })
+-app.get('/find_driver_not_selected',async(req,res)=>{
+-    Admin_cont.get_driver_not_selected().then((result)=>{
+-        res.send({driver:result});
+-    })})
++app.get('/find_driver_not_selected', async (req, res) => {
++    Admin_cont.get_driver_not_selected().then((result) => {
++        res.send({driver: result});
++    })
++})
+ 
+-app.get('/get_buses',async (req,res)=>{
+-    Admin_cont.get_buses().then((result)=>{
+-        res.send(result);
++app.get('/get_buses', async (req, res) => {
++    Admin_cont.get_buses().then((result) => {
++        res.send({buses: result});
+     })
+ })
+ app.post('/add_user', async (req, res) => {
+@@ -43,18 +53,18 @@
+ 
+     let check_email = await Admin_cont.check_admins_supervisor_driver_parent_student(req.body.user.email);
+     if (check_email == false) {
+-        res.send({status: "Email is alredy exist"})
++        res.send({status: "Email is already exist"})
+     }
+     ;
+     let check_by_contact = await Admin_cont.check_user_by_contact_number(req.body.user.contactNumber)
+     if (check_by_contact == false) {
+-        res.send({status: "The Contact_Numeber is alredy exist"})
++        res.send({status: "The Contact_Numeber is already exist"})
+     }
+     ;
+ 
+     let check_by_national = await Admin_cont.check_user_by_national_namber(req.body.user.nationalNumber);
+     if (check_by_national == false) {
+-        res.send({status: "The National Number is alredy exist"})
++        res.send({status: "The National Number is already exist"})
+     }
+ 
+     if (req.body.user.userType === "admin") {
+@@ -134,51 +144,49 @@
+         par.address = req.body.user.address;
+         Admin_cont.add_parent(par);
+         par.Type_of_user = req.body.user.UserType;
+-        Admin_cont.add_parent(par).then(result => {
+-            res.send({user: result, status: true});
+-        })
++        par.students=req.body.user.students;
++      let add_parent=await  Admin_cont.add_parent(par);
++            res.send({user: add_parent, status: true});
++
+ 
+     }
+ })
+ 
+ //add student
+ app.get('/get_add_student', async (req, res) => {
+-    let stud=new student();
+-    stud.name=req.body.name;
+-    stud.parent_mail=req.body.parent_mail;
+-    stud.age=req.body.age;
+-    stud.bus=req.body.bus;
+-    stud.classNumber=req.body.classNumber;
+-    stud.level=req.body.level;
+-    stud.dateOfBirth= new Date(req.body.user.yearOfBirth, req.body.user.MonthOfBirth, req.body.user.DayOfBirth);
+-    Admin_cont.add_student(stud).then(result=>{
++    let stud = new student();
++    stud.name = req.body.name;
++    stud.parent_mail = req.body.parent_mail;
++    stud.age = req.body.age;
++    stud.bus = req.body.bus;
++    stud.classNumber = req.body.classNumber;
++    stud.level = req.body.level;
++    stud.dateOfBirth = new Date(req.body.user.yearOfBirth, req.body.user.MonthOfBirth, req.body.user.DayOfBirth);
++    Admin_cont.add_student(stud).then(result => {
+         res.send(result);
+     });
+ });
+ 
+ 
+ app.get('/get_find_admins', async (req, res) => {
+-    Admin_cont.get_admins().then((result)=>{
++    Admin_cont.get_admins().then((result) => {
+         console.log(result);
+         res.send({Users: result});
+     });
+ });
+-app.get('/get_find_parents',async (req,res)=>
+-{
++app.get('/get_find_parents', async (req, res) => {
+     Admin_cont.getparents().then((result) => {
+         console.log(result);
+         res.send({Users: result});
+     })
+ })
+-app.get('/get_find_drivers',async (req,res)=>
+-{
++app.get('/get_find_drivers', async (req, res) => {
+     Admin_cont.getdrivers().then((result) => {
+         console.log(result);
+         res.send({Users: result});
+     })
+ });
+-app.get('/get_find_supervisors',async (req,res)=>
+-{
++app.get('/get_find_supervisors', async (req, res) => {
+     Admin_cont.getsupervisor().then((result) => {
+         console.log(result);
+         res.send({Users: result});
+@@ -186,116 +194,84 @@
+ });
+ app.get('/review_reports', async (req, res) => {
+ 
+-    Admin_cont.review_reports().then((result)=>{
++    Admin_cont.review_reports().then((result) => {
+         console.log(result);
+         res.send(result);
+     });
+ });
+-app.get('/add_resp',async(req,res)=>{
+-    let repo=new report();
+-    repo.content=req.body.content;
+-    repo.receiver_mail_or_id=req.body.email;
+-    repo.User_mail="admin";
+-    Admin_cont.add_report(repo).then(result=>{
++app.get('/add_resp', async (req, res) => {
++    let repo = new report();
++    repo.content = req.body.content;
++    repo.receiver_mail_or_id = req.body.email;
++    repo.User_mail = "admin";
++    Admin_cont.add_report(repo).then(result => {
+         res.send(result);
+     })
+ });
+-app.post('/login',async  (req,res)=>{
+-    Admin_cont.check_adimn(req.body.email,req.body.password).then (
+-        (result=>{
+-            if(result!=null){
+-                req.session.user=result;
+-                res.send({ user: result});
+-            }
+-            else {
+-                res.send({ user: null});
++app.post('/login', async (req, res) => {
++    Admin_cont.check_adimn(req.body.email, req.body.password).then(
++        (result => {
++            if (result != null) {
++                req.session.user = result;
++                res.send({user: result});
++            } else {
++                res.send({user: null});
+             }
+         })
+     )
+ });
+ 
+-app.post('/find_user',async (req,res)=>{
+-    if(req.body.type==="email"){
+-        Admin_cont.find_user_by_email(req.body.email,req.body.usertype).then(result=> {
++app.post('/find_user', async (req, res) => {
++    if (req.body.type === "email") {
++        Admin_cont.find_user_by_email(req.body.email, req.body.usertype).then(result => {
+             if (result != null) {
+                 res.send({user: result});
+             } else {
+                 res.send({user: null});
+             }
+         })
+-    }
+-    else if (req.body.type==="address"){
+-        Admin_cont.find_user_by_address(req.body.address,req.body.usertype).then(result=>{
+-            if(result!=null){
+-                res.send({user:result});
+-            }
+-            else {
+-                res.send({user:null});
++    } else if (req.body.type === "address") {
++        Admin_cont.find_user_by_address(req.body.address, req.body.usertype).then(result => {
++            if (result != null) {
++                res.send({user: result});
++            } else {
++                res.send({user: null});
+             }
+         })
+-    }
+-    else if(req.body.type==="contact_number"){
+-        Admin_cont.find_user_by_contact_number(req.body.address,req.body.usertype).then(result=>{
+-            if(result!=null){
+-                res.send({user:result});
+-            }
+-            else {
+-                res.send({user:null});
++    } else if (req.body.type === "contact_number") {
++        Admin_cont.find_user_by_contact_number(req.body.address, req.body.usertype).then(result => {
++            if (result != null) {
++                res.send({user: result});
++            } else {
++                res.send({user: null});
+             }
+ 
+         })
+-    }
+-    else if(req.body.type==="username"){
+-        Admin_cont.find_user_by_username(req.body.username,req.body.usertype).then(result=>{
+-            if(result!=null){
+-                res.send({user:result});
+-            }
+-            else {
+-                res.send({user:null});
++    } else if (req.body.type === "username") {
++        Admin_cont.find_user_by_username(req.body.username, req.body.usertype).then(result => {
++            if (result != null) {
++                res.send({user: result});
++            } else {
++                res.send({user: null});
+             }
+         })
+     }
+ })
+ 
+-app.post('/add_answer',async (req,res)=>{
+-    Admin_cont.find_and_update_report("req.body.email","req.body.answer").then(result=>{res.send(result)})
++app.post('/add_answer', async (req, res) => {
++    Admin_cont.find_and_update_report("req.body.email", "req.body.answer").then(result => {
++        res.send(result)
++    })
+ });
+ 
+-app.post('/notification',async (req,res)=>{
+-    let repo=new report();
+-    repo.type=req.body.type;
+-    repo.content="general";
+-    repo.User_mail="admin";
+-    repo.receiver_mail_or_id="parents";
+-    Admin_cont.add_report(repo).then(result=>{
++app.post('/notification', async (req, res) => {
++    let repo = new report();
++    repo.type = req.body.type;
++    repo.content = "general";
++    repo.User_mail = "admin";
++    repo.receiver_mail_or_id = "parents";
++    Admin_cont.add_report(repo).then(result => {
+         res.send(result);
+     })
+ 
+ });
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+-
+Index: src/databaserequests/Admin_controller.js
+IDEA additional info:
+Subsystem: com.intellij.openapi.diff.impl.patch.BaseRevisionTextPatchEP
+<+>const Admin = require('../entity/Admin').Admin;\r\nconst Driver = require('../entity/Driver').Driver;\r\nconst Bus = require('../entity/Bus').Bus;\r\nconst student = require('../entity/Student').Student;\r\nconst Supervisor =require('../entity/Supervisor').Supervisor;\r\nconst report = require('../entity/Report').Report;\r\nconst Parent = require('../entity/Parent').Parent;\r\nconst metadata = require(\"reflect-metadata\");\r\nconst getConnection = require(\"typeorm\").getConnection();\r\nconst connection = getConnection;\r\nconst eventEmitter = require(\"events\");\r\n\r\nlet event = new eventEmitter();\r\n\r\n// to add a new admin\r\nlet add_admin=async function(admin)\r\n{\r\n    let adminRep = await connection.getRepository(Admin);\r\n    await adminRep.save(admin);\r\n    let adm=await adminRep.findOne(admin);\r\n    return adm;\r\n}\r\n\r\n// add a new student\r\nlet add_student=async function(stud)\r\n{\r\n    let studentRep = await connection.getRepository(student);\r\n    await studentRep.save(stud);\r\n    let s=await studentRep.find(stud);\r\n    return s;\r\n}\r\n//add a new parent\r\nlet add_parent=async function(par)\r\n{\r\n    let studentRep = await connection.getRepository(Parent);\r\n    await studentRep.save(par);\r\n    let adm=await studentRep.find(par);\r\n    return adm;\r\n}\r\n\r\n//add a new supervisor\r\nlet add_superavisor=async function(sup)\r\n{\r\n    let studentRep = await connection.getRepository(Supervisor);\r\n    await studentRep.save(sup);\r\n    let adm=await studentRep.find(sup);\r\n    return adm;\r\n}\r\n\r\n//add a new driver\r\nlet add_driver=async function(drive)\r\n{\r\n    let driver = await connection.getRepository(Driver);\r\n    await driver.save(drive);\r\n    let adm=await driver.find(drive);\r\n    return adm;\r\n}\r\n//add bus\r\nlet add_buses=async function(bus){\r\n    let busRep=await connection.getRepository(Bus);\r\n    await busRep.save(bus);\r\n}\r\n//get all admins\r\nlet get_admins = async function ()\r\n{\r\n    let admin = await getConnection.getRepository(Admin);\r\n    let Ad = await admin.find();\r\n    return Ad;\r\n};\r\nlet check_user_by_contact_number=async function(contact){\r\n    let adm=await getConnection.getRepository(Admin);\r\n    let sup=await getConnection.getRepository(Supervisor);\r\n    let driv=await getConnection.getRepository(Driver);\r\n    let par= await getConnection.getRepository(Parent);\r\n    let admin=adm.find({contactNumber:contact});\r\n    let supervis=sup.find({contactNumber:contact});\r\n    let parent=par.find({contactNumber:contact});\r\n    let driver= driv.find({contactNumber:contact});\r\n    if(admin!=null||supervis!=null||parent!=null||driver!=null){\r\n        return false;\r\n    }\r\n    else\r\n    {\r\n        return true;\r\n    }\r\n}\r\n\r\n\r\n\r\nlet check_user_by_national_namber=async function(national){\r\n    let adm=await getConnection.getRepository(Admin);\r\n    let sup=await getConnection.getRepository(Supervisor);\r\n    let driv=await getConnection.getRepository(Driver);\r\n    let par= await getConnection.getRepository(Parent);\r\n    let admin=adm.find({nationalNumber:national});\r\n    let supervis=sup.find({nationalNumber:national});\r\n    let parent=par.find({nationalNumber:national});\r\n    let driver= driv.find({nationalNumber:national});\r\n    if(admin!=null||supervis!=null||parent!=null||driver!=null){\r\n        return false;\r\n    }\r\n    else\r\n    {\r\n        return true;\r\n    }\r\n}\r\n//get all parents\r\nlet get_buses=async function(){\r\n    let busRepo=await getConnection.getRepository(Bus);\r\n    let buses=await busRepo.find({relation:['driver','supervisor','students','routePath']});\r\n    return buses;}\r\n\r\n////get all drivers\r\nlet getdrivers=async function(){\r\n    let DriverRepo=await getConnection.getRepository(Driver);\r\n    let drivers=await DriverRepo.find();\r\n    return drivers;}\r\n\r\n////get all supervisor\r\nlet getsupervisor=async function(){\r\n    let supervisorRepo=await getConnection.getRepository(Supervisor);\r\n    let supervis=await supervisorRepo.find();\r\n    return supervis;}\r\n//review reports\r\nlet review_reports=async function(){\r\n    let ParentRepo=await getConnection.getRepository(report);\r\n    let repo=await ParentRepo.find();\r\n    return repo;\r\n};\r\n//find report to answer\r\nlet find_and_update_report=async function(email,answer){\r\n    let ParentRepo=await getConnection.getRepository(report);\r\n    let update=await  ParentRepo.createQueryBuilder().update(ParentRepo)\r\n        .set({ answer: answer})\r\n        .where( {User_mail:email,Ishidden:false})\r\n        .execute();\r\n    let after_update=await ParentRepo.findOne({email:email,answer:answer});\r\n    return after_update;\r\n};\r\n// check admin\r\nlet check_adimn=async function (email,password){\r\n    let admin = await getConnection.getRepository(Admin);\r\n    let ad=await admin.findOne({email,password});\r\n    if(ad!=null){\r\n        return ad;\r\n    }\r\n    else {\r\n        return null;\r\n    }\r\n}\r\nlet check_admins_supervisor_driver_parent_student = async function (email)\r\n{\r\n    let admin = await getConnection.getRepository(Admin);\r\n    let supervisor = await getConnection.getRepository(Supervisor);\r\n    let driver = await getConnection.getRepository(Driver);\r\n    let parent= await getConnection.getRepository(Parent);\r\n    let Ad= await admin.findOne({email:email});\r\n    let sup = await supervisor.findOne({email:email});\r\n    let driv = await driver.findOne({email:email});\r\n    let par= await parent.findOne({email:email});\r\n\r\n\r\n    if(Ad==null&&sup==null&&driv==null&&par==null){\r\n        return true;\r\n    }\r\n    else{\r\n        return false;\r\n    }\r\n};\r\n//let find_student_of_paent\r\nlet find_user_by_email= async function(email,type){\r\n    let admin = await getConnection.getRepository(Admin);\r\n    let supervisor = await getConnection.getRepository(Supervisor);\r\n    let driver = await getConnection.getRepository(Driver);\r\n    let parent= await getConnection.getRepository(Parent);\r\n    let student = await getConnection.getRepository(Student);\r\n    let Ad= await admin.findOne({email:email});\r\n    let sup = await supervisor.findOne({email:email});\r\n    let drive = await driver.findOne({email:email});\r\n    let par= await parent.findOne({email:email});\r\n    let stud= await student.findOne({email:email});\r\n    if(Ad!=null&&type===\"admin\"){\r\n        return Ad;\r\n    }\r\n    else if(sup!=null&&type===\"supervisor\"){\r\n        return sup;\r\n    }\r\n    else if(stud!=null&&type===\"student\"){\r\n        return stud;\r\n    }\r\n    else if(drive!=null&&type===\"driver\"){\r\n        return drive;\r\n    }\r\n    else if(par!=null&&type==\"parent\"){\r\n        return par;\r\n    }\r\n    /*else if(stud!=null){\r\n        return stud;\r\n    }*/\r\n    else {\r\n        return false;\r\n    }\r\n};\r\n\r\nlet find_user_by_address= async function(address,type){\r\n    let admin = await getConnection.getRepository(Admin);\r\n    let supervisor = await getConnection.getRepository(Supervisor);\r\n    let driver = await getConnection.getRepository(Driver);\r\n    let parent= await getConnection.getRepository(Parent);\r\n    //let student = await getConnection.getRepository(Student);\r\n    let Ad= await admin.findOne({address:address});\r\n    let sup = await supervisor.findOne({address:address});\r\n    let drive = await driver.findOne({address:address});\r\n    let par= await parent.findOne({address:address});\r\n    let stud= await student.findOne({address:address});\r\n    if(Ad!=null&&type===\"admin\"){\r\n        return Ad;\r\n    }\r\n    else if(sup!=null&&type===\"supervisor\"){\r\n        return sup;\r\n    }\r\n    else if(drive!=null&&type===\"driver\"){\r\n        return drive;\r\n    }\r\n    else if(par!=null&&type===\"parent\"){\r\n        return par;\r\n    }\r\n    /* else if(stud!=null&&type===\"supervisor\"){\r\n         return stud;\r\n     }*/\r\n    else {\r\n        return false;\r\n    }\r\n};\r\n\r\nlet find_user_by_contact_number= async function(contact_number,type){\r\n    let admin = await getConnection.getRepository(Admin);\r\n    let supervisor = await getConnection.getRepository(Supervisor);\r\n    let driver = await getConnection.getRepository(Driver);\r\n    let parent= await getConnection.getRepository(Parent);\r\n    //let student = await getConnection.getRepository(Student);\r\n    let Ad= await admin.findOne({contactNumber:contact_number});\r\n    let sup = await supervisor.findOne({contactNumber:contact_number});\r\n    let drive = await driver.findOne({contactNumber:contact_number});\r\n    let par= await parent.findOne({contactNumber:contact_number});\r\n    //let stud= await student.findOne({contactNumber:contact_number});\r\n    if(Ad!=null&&type===\"admin\"){\r\n        return Ad;\r\n    }\r\n    else if(sup!=null&&type===\"supervisor\"){\r\n        return sup;\r\n    }\r\n    else if(drive!=null&&type===\"driver\"){\r\n        return drive;\r\n    }\r\n    else if(par!=null&&type===\"parent\"){\r\n        return par;\r\n    }\r\n    /* else if(stud!=null){\r\n         return stud;\r\n     }*/\r\n    else {\r\n        return false;\r\n    }\r\n};\r\n\r\nlet find_user_by_username= async function(Username,type){\r\n    let admin = await getConnection.getRepository(Admin);\r\n    let supervisor = await getConnection.getRepository(Supervisor);\r\n    let driver = await getConnection.getRepository(Driver);\r\n    let parent= await getConnection.getRepository(Parent);\r\n    // let student = await getConnection.getRepository(Student);\r\n    let Ad= await admin.findOne({Username:Username});\r\n    let sup = await supervisor.findOne({Username:Username});\r\n    let drive = await driver.findOne({Username:Username});\r\n    let par= await parent.findOne({Username:Username});\r\n    // let stud= await student.findOne({Username:Username});\r\n    if(Ad!=null&&type===\"admin\"){\r\n        return Ad;\r\n    }\r\n    else if(sup!=null&&type===\"supervisor\"){\r\n        return sup;\r\n    }\r\n    else if(drive!=null&&type===\"driver\"){\r\n        return drive;\r\n    }\r\n    else if(par!=null&&type===\"parent\"){\r\n        return par;\r\n    }\r\n    /*else if(stud!=null){\r\n        return stud;\r\n    }*/\r\n    else {\r\n        return false;\r\n    }\r\n};\r\nlet find_driver=async function(id){\r\n    let driv=await getConnection.getRepository(Driver);\r\n    let dr=await driv.findOne({id:id});\r\n    return dr;\r\n}\r\nlet find_supervisor=async function(id){\r\n    let super_visor=await getConnection.getRepository(Supervisor);\r\n    let dr=await super_visor.findOne({id:id});\r\n    return dr;\r\n}\r\n\r\nlet add_report=async function(repo){\r\n    let report_connection=await getConnection.getRepository(report);\r\n    let add_answer=await report_connection.save(repo);\r\n    return add_answer;\r\n};\r\nlet get_driver_not_selected=async function(){\r\n    let driv=await getConnection.getRepository(Driver);\r\n    let driv_not_selected=driv.find({bus:null});\r\n    return driv_not_selected;\r\n}\r\nlet get_supervisor_not_selected=async function(){\r\n    let driv=await getConnection.getRepository(Supervisor);\r\n    let driv_not_selected=driv.find({bus:null});\r\n    return driv_not_selected;\r\n}\r\n\r\n/*\r\n///////\r\nlet findByCandidateAndPosition = async function (candidate,position)\r\n{\r\n    let userExamRepo = await getConnection.getRepository(UserExams);\r\n    let Exams = await userExamRepo.find(\r\n        {\r\n            where: {candidate: candidate,position: position},\r\n            relations : [\"exam\",\"candidate\",\"precedence\",\"questions\",\"position\"]\r\n        });\r\n    return Exams;\r\n};\r\nlet findByCandidateAndExamAndPosition =async function (candidate,exam,position)\r\n{\r\n    let userExamRepo = await getConnection.getRepository(UserExams);\r\n    let Exams = await userExamRepo.findOne(\r\n        {\r\n            where: {exam: exam, candidate: candidate,position: position},\r\n            relations : [\"exam\",\"candidate\",\"precedence\",\"questions\"]\r\n        });\r\n    return Exams;\r\n};\r\n//Emitter.on(\"save\",(userExam) =>{\r\nlet save = async function (userExam){\r\n    let userExamRepo = await getConnection.getRepository(UserExams);\r\n    await userExamRepo.save(userExam);\r\n};\r\n//////////////////////////////////////////////////////////////////////////////////////////\r\nevent.on('getUserGeneratedExam', async (req, res) => {\r\n    //user exam should come from sessions\r\n    // let exam = req.session.exam;\r\n    // let candidate = req.session.candidate;\r\n    // let exam = await connection.getRepository(Exam).findOne({name: req.body.examName}, {relations: [\"questions\"]});\r\n    // let candidate = await connection.getRepository(Candidate).findOne({username: req.body.userName});\r\n    let userExam = await getUserEx(req);\r\n    let exam = userExam.exam;\r\n    let status = false;\r\n    let numOfQuestions =4;\r\n    if (userExam.precedence == null || userExam.precedence.passed) {\r\n        if (userExam.questions.length != numOfQuestions) {\r\n            let generatedQuestions = getRandomElements(exam.questions, numOfQuestions);\r\n            for (let i = 0; i < numOfQuestions; i++) {\r\n                let questionDetails = new QuestionDetail();\r\n                questionDetails.question = generatedQuestions[i];\r\n                let wrongAns = await connection.manager.find(Answer, {\r\n                    question: questionDetails.question,\r\n                    correctness: false\r\n                });\r\n                questionDetails.answers = getRandomElements(wrongAns, 3);\r\n                let correctAnswers = await connection.manager.find(Answer, {\r\n                    question: questionDetails.question,\r\n                    correctness: true\r\n                });\r\n                questionDetails.answers.push(getRandomElements(correctAnswers, 1)[0]);\r\n                shuffle(questionDetails.answers);\r\n                questionDetails.userExam = userExam;\r\n                await connection.manager.save(questionDetails);\r\n                // userExam.questions.push(questionDetails);\r\n            }\r\n            userExam = await getUserEx(req);\r\n        }\r\n        // await userExam.reload();\r\n        status = true;\r\n    }\r\n    // req.session.setTimeout(10,(gfhgj)=>{\r\n    //    console.log('timeOut')\r\n    // });\r\n    res.send({status: status, userExam: userExam});\r\n});\r\n// let getUserExam = ( examName, userName)=>{\r\n//     return typeorm.createConnection().then(async connection => {\r\n//         let exam = await connection.getRepository(Exam).findOne({name: examName},{ relations: [\"questions\"] });\r\n//         let candidate = await connection.getRepository(Candidate).findOne({username: userName});\r\n//         let userExam = await connection.manager.findOne(UserExams, {exam: exam, candidate: candidate},\r\n//             {relations:[\"exam\",\"candidate\",\"questions\",\"questions.question\",\"questions.chosenAnswer\",\"questions.answers\"]});\r\n//         await connection.close();\r\n//         return userExam;\r\n//     }).catch(error => console.log(error));\r\n// };\r\nfunction getRandomElements(arr, numOfElements) {\r\n    let returnArray = new Array(numOfElements);\r\n    let chosenIndex;\r\n    let chosenElements = new Array(numOfElements);\r\n    for (let i=0; i< numOfElements; i++) {\r\n        do {\r\n            chosenIndex = randomInt(0, arr.length);\r\n        } while (chosenElements.includes(chosenIndex));\r\n        chosenElements[i] = chosenIndex;\r\n        returnArray[i] = arr[chosenIndex];\r\n    }\r\n    return returnArray;\r\n}\r\nfunction randomInt(low, high) {// low (inclusive) and high (exclusive) ([low, high\r\n    return Math.floor(Math.random() * (high - low) + low)\r\n}\r\nlet getUserExam = async (examName, userName) => {\r\n    let exam = await connection.getRepository(Exam).findOne({name: examName}, {relations: [\"questions\"]});\r\n    let candidate = await connection.getRepository(Candidate).findOne({username: userName});\r\n    return await connection.manager.findOne(UserExams, {exam: exam, candidate: candidate},\r\n        {relations: [\"exam\", \"candidate\", \"precedence\", \"precedence.exam\", \"precedence.candidate\",\r\n                \"questions\", \"questions.question\", \"questions.chosenAnswer\", \"questions.answers\"]});\r\n};\r\nlet getUserEx = async (req) => {\r\n    return await connection.manager.findOne(UserExams, {id: req.session.userExamID},\r\n        {relations: [\"exam\",\"exam.questions\", \"candidate\",\"precedence\",\"precedence.exam\",\"precedence.candidate\", \"questions\", \"questions.question\", \"questions.chosenAnswer\", \"questions.answers\"]});\r\n};\r\nlet updateSolvingUserExam = async (req)=> {\r\n    //user exam should come from sessions\r\n    let userExam = await getUserEx(req);\r\n    let questionDetail = req.body.questionDetail;\r\n    let chosenAnsID = req.body.chosenAnswerID;\r\n    await connection.getRepository(QuestionDetail).update({userExam: userExam, question: questionDetail.question},\r\n        {chosenAnswer: chosenAnsID});\r\n};\r\nlet updateUserExamResults = async (req) => {\r\n    let userExam =await getUserEx(req);\r\n    let score = 0 ;\r\n    let numOfQuestions= userExam.questions.length;\r\n    userExam.questions.forEach((questionDetail)=>{\r\n        if (questionDetail.chosenAnswer && questionDetail.chosenAnswer.correctness)\r\n        {\r\n            score+= 1/numOfQuestions;\r\n        }\r\n    });\r\n    let passed = false;\r\n    if(score>= .5){\r\n        passed = true;\r\n    }\r\n    await connection.getRepository(UserExams).update({id:userExam.id},{passed:passed, score:score});\r\n};\r\n*/\r\n\r\nmodule.exports ={\r\n    event,\r\n    check_user_by_contact_number,\r\n    check_user_by_national_namber,\r\n    //save,\r\n    add_admin,\r\n    find_supervisor,\r\n    add_student,\r\n    add_parent,\r\n    add_superavisor,\r\n    add_driver,\r\n    add_buses,\r\n    get_buses,\r\n    get_admins,\r\n    review_reports,\r\n    check_admins_supervisor_driver_parent_student,\r\n    find_driver,\r\n    getsupervisor,\r\n    check_adimn,\r\n    find_user_by_username,\r\n    find_user_by_contact_number,\r\n    find_user_by_address,\r\n    find_user_by_email,\r\n    add_report,\r\n    find_and_update_report,\r\n    get_supervisor_not_selected,\r\n    get_driver_not_selected,\r\n    getdrivers\r\n\r\n    /*  findByCandidateAndExamAndPosition,\r\n      findByCandidateAndPosition,\r\n      getUserExam,updateSolvingUserExam, updateUserExamResults,getUserEx*/\r\n\r\n};
+Subsystem: com.intellij.openapi.diff.impl.patch.CharsetEP
+<+>UTF-8
+===================================================================
+--- src/databaserequests/Admin_controller.js	(revision 325011c87fd1ad4aeafac1595bbe2614b3009d3f)
++++ src/databaserequests/Admin_controller.js	(date 1560208257539)
+@@ -1,3 +1,5 @@
++const IsNull = require('typeorm').IsNull;
++
+ const Admin = require('../entity/Admin').Admin;
+ const Driver = require('../entity/Driver').Driver;
+ const Bus = require('../entity/Bus').Bus;
+@@ -58,8 +60,8 @@
+ //add bus
+ let add_buses=async function(bus){
+     let busRep=await connection.getRepository(Bus);
+-    await busRep.save(bus);
+-}
++    return await busRep.save(bus);
++};
+ //get all admins
+ let get_admins = async function ()
+ {
+@@ -84,8 +86,20 @@
+         return true;
+     }
+ }
++let get_parent=async function(){
++    let parent= await getConnection.getRepository(Parent);
++    let parents= await parent.find({relations:['students','reports']});
++    return parents;}
+ 
++let check_buses=async function(number){
++    let bus=await getConnection.getRepository(Bus);
++    let buses=bus.find({bus_numbers:number});
++    if(buses==null){return true;}
++    else{
++        return false;
++    }
+ 
++}
+ 
+ let check_user_by_national_namber=async function(national){
+     let adm=await getConnection.getRepository(Admin);
+@@ -106,10 +120,11 @@
+ }
+ //get all parents
+ let get_buses=async function(){
+-    let busRepo=await getConnection.getRepository(Bus);
+-    let buses=await busRepo.find({relation:['driver','supervisor','students','routePath']});
++    let busRepo= await getConnection.getRepository(Bus);
++    let buses= await busRepo.find({relations:['driver','supervisor','students','routePath']});
+     return buses;}
+ 
++
+ ////get all drivers
+ let getdrivers=async function(){
+     let DriverRepo=await getConnection.getRepository(Driver);
+@@ -312,12 +327,12 @@
+ };
+ let get_driver_not_selected=async function(){
+     let driv=await getConnection.getRepository(Driver);
+-    let driv_not_selected=driv.find({bus:null});
++    let driv_not_selected=await driv.find({where:{bus:IsNull()}});
+     return driv_not_selected;
+ }
+ let get_supervisor_not_selected=async function(){
+     let driv=await getConnection.getRepository(Supervisor);
+-    let driv_not_selected=driv.find({bus:null});
++    let driv_not_selected=await driv.find({where:{bus: IsNull()}});
+     return driv_not_selected;
+ }
+ 
+@@ -480,7 +495,9 @@
+     find_and_update_report,
+     get_supervisor_not_selected,
+     get_driver_not_selected,
+-    getdrivers
++    getdrivers,
++    check_buses,
++    get_parent
+ 
+     /*  findByCandidateAndExamAndPosition,
+       findByCandidateAndPosition,
